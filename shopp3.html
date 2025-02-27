@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sheep Day</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            height: 114vh;
+            overflow: hidden;
+            position: relative;
+        }
+        #background-day {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('https://files.catbox.moe/f6cl9o.png') no-repeat center 70%;
+            background-size: cover;
+            background-attachment: fixed;
+            transition: filter 1s ease;
+            z-index: 0;
+        }
+        #background-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('https://files.catbox.moe/7yhx8s.png') no-repeat center 70%;
+            background-size: cover;
+            background-attachment: fixed;
+            opacity: 0;
+            transition: opacity 1s ease, filter 1s ease;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .sheep {
+            position: absolute;
+            width: 200px;
+            height: 125px;
+            z-index: 1;
+        }
+        .sheep-body {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: url('https://files.catbox.moe/14n3vz.png') no-repeat center;
+            background-size: contain;
+            transition: transform 0.2s ease, filter 1s ease, bottom 0.3s ease;
+            z-index: 2;
+        }
+        .leg {
+            position: absolute;
+            width: 40px;
+            height: 60px;
+            background: url('https://files.catbox.moe/m7kbhc.png') no-repeat center;
+            background-size: contain;
+            z-index: 1;
+        }
+        .sheep .leg:nth-child(2) {
+            left: 65px;
+            bottom: 6px;
+        }
+        .sheep .leg:nth-child(3) {
+            left: 98px;
+            bottom: 6px;
+        }
+        .walking .leg:nth-child(2) {
+            animation: walk 0.6s infinite alternate ease-in-out;
+        }
+        .walking .leg:nth-child(3) {
+            animation: walk 0.6s infinite alternate ease-in-out 0.3s;
+        }
+        @keyframes walk {
+            from { transform: translateX(-3px); }
+            to { transform: translateX(3px); }
+        }
+        .following .leg:nth-child(2) {
+            animation: followWalk 0.5s infinite alternate ease-in-out;
+        }
+        .following .leg:nth-child(3) {
+            animation: followWalk 0.5s infinite alternate ease-in-out 0.25s;
+        }
+        @keyframes followWalk {
+            from { transform: translateX(-4px) rotate(-5deg); }
+            to { transform: translateX(4px) rotate(5deg); }
+        }
+        .fleeing .leg:nth-child(2) {
+            animation: fleeWalk 0.5s infinite alternate ease-in-out;
+        }
+        .fleeing .leg:nth-child(3) {
+            animation: fleeWalk 0.5s infinite alternate ease-in-out 0.25s;
+        }
+        @keyframes fleeWalk {
+            from { transform: translateX(-4px) rotate(-5deg); }
+            to { transform: translateX(4px) rotate(5deg); }
+        }
+        .wolf-container {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            z-index: 3;
+            transition: filter 1s ease;
+            transform: scaleX(1);
+        }
+        .wolf-part {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100px;
+            height: 100px;
+        }
+        .body {
+            z-index: 1;
+            animation: bodySway 1.8s infinite ease-in-out;
+        }
+        .back-leg {
+            z-index: 2;
+            animation: legStalkBack 1.8s infinite ease-in-out alternate;
+        }
+        .front-leg {
+            z-index: 3;
+            animation: legStalkFront 1.8s infinite ease-in-out alternate;
+        }
+        .paused .body, .paused .back-leg, .paused .front-leg {
+            animation: none;
+        }
+        @keyframes bodySway {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-2px) rotate(0.5deg); }
+            75% { transform: translateY(1px) rotate(-0.5deg); }
+        }
+        @keyframes legStalkFront {
+            0% { transform: rotate(0deg); }
+            15% { transform: rotate(4deg); }
+            30% { transform: rotate(7deg); }
+            45% { transform: rotate(5deg); }
+            60% { transform: rotate(2deg); }
+            80% { transform: rotate(-1deg); }
+            100% { transform: rotate(0deg); }
+        }
+        @keyframes legStalkBack {
+            0% { transform: rotate(0deg); }
+            15% { transform: rotate(-2deg); }
+            30% { transform: rotate(-4deg); }
+            45% { transform: rotate(-3deg); }
+            60% { transform: rotate(-1deg); }
+            80% { transform: rotate(2deg); }
+            100% { transform: rotate(0deg); }
+        }
+        /* Coin UI Styles */
+        #coin-ui {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            align-items: center;
+            z-index: 10;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #coin-icon {
+            width: 60px;
+            height: 60px;
+            margin-right: 2px;
+        }
+        #coin-count {
+            font-size: 20px;
+            color: white;
+            font-family: 'Press Start 2P', cursive;
+        }
+        /* Shop UI Styles */
+        #shop-ui {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #7EA172; /* Light green background */
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 20;
+            display: none;
+            font-family: 'Press Start 2P', cursive;
+            color: white;
+            text-align: center;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        #shop-ui h2 {
+            margin-top: 0;
+            font-size: 24px;
+            text-transform: uppercase;
+        }
+        #shop-items {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .shop-item {
+            background-color: #778472; /* Darker green for item boxes */
+            padding: 10px;
+            width: 120px;
+            text-align: center;
+            border-radius: 5px;
+            margin: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+        .shop-item img {
+            width: 50px;
+            height: 50px;
+            margin-bottom: 5px;
+        }
+        .shop-item .name {
+            font-size: 14px;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .shop-item .description {
+            font-size: 12px;
+            margin-bottom: 10px;
+            color: white;
+        }
+        .shop-item .price {
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+        .shop-item button {
+            background-color: #C2E1C2; /* Light green for Buy/Equip button */
+            color: #000000;
+            border: none;
+            padding: 5px 10px;
+            font-family: 'Press Start 2P', cursive;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        .shop-item.sold-out button {
+            background-color: #ff0000; /* Red for "Sold Out" */
+            cursor: not-allowed;
+        }
+        #exit-button {
+            background-color: #C2E1C2; /* Light green for EXIT button */
+            color: #000000;
+            border: none;
+            padding: 5px 20px;
+            font-family: 'Press Start 2P', cursive;
+            cursor: pointer;
+            border-radius: 3px;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        /* Dog Sprite Styles */
+        #dog-sprite {
+            position: absolute;
+            width: 67px; /* Reduced size */
+            height: 67px; /* Reduced size */
+            bottom: 120px;
+            right: 50px;
+            z-index: 4;
+            background: url('https://files.catbox.moe/jp1z9x.png') no-repeat center;
+            background-size: contain;
+            display: none;
+        }
+        /* Coin Gain Animation Styles */
+        .coin-gain {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            color: #90EE90;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 16px;
+            z-index: 5;
+            pointer-events: none;
+            animation: coinRise 1s ease-out forwards;
+        }
+        .coin-gain img {
+            width: 45px;
+            height: 45px;
+            margin-left: 1px;
+        }
+        @keyframes coinRise {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-50px); }
+        }
+    </style>
+</head>
+<body>
+    <div id="background-day"></div>
+    <div id="background-overlay"></div>
+    <div id="coin-ui">
+        <img src="https://files.catbox.moe/8n2ufc.png" alt="Coin Icon" id="coin-icon">
+        <span id="coin-count">0</span>
+    </div>
+    <div id="shop-ui">
+        <h2>SHOP</h2>
+        <p>Current Coins: <span id="shop-coin-count">0</span></p>
+        <div id="shop-items">
+            <div class="shop-item">
+                <img src="https://files.catbox.moe/jp1z9x.png" alt="Dog">
+                <div class="name">Dog</div>
+                <div class="description">Keeps your sheep safe from the wolf</div>
+                <div class="price">50 Coins</div>
+                <button class="buy-equip-button">Buy</button>
+            </div>
+        </div>
+        <button id="exit-button">EXIT</button>
+    </div>
+    <div id="dog-sprite"></div> <!-- Added dog sprite container -->
+    <div class="sheep" id="sheep0">
+        <div class="sheep-body"></div>
+        <div class="leg"></div>
+        <div class="leg"></div>
+    </div>
+    <div class="sheep" id="sheep1">
+        <div class="sheep-body"></div>
+        <div class="leg"></div>
+        <div class="leg"></div>
+    </div>
+    <div class="sheep" id="sheep2">
+        <div class="sheep-body"></div>
+        <div class="leg"></div>
+        <div class="leg"></div>
+    </div>
+    <div class="sheep" id="sheep3">
+        <div class="sheep-body"></div>
+        <div class="leg"></div>
+        <div class="leg"></div>
+    </div>
+    <div class="sheep" id="sheep4">
+        <div class="sheep-body"></div>
+        <div class="leg"></div>
+        <div class="leg"></div>
+    </div>
+    <div class="sheep" id="sheep5">
+        <div class="sheep-body"></div>
+        <div class="leg"></div>
+        <div class="leg"></div>
+    </div>
+    <div class="wolf-container" id="wolf">
+        <img src="https://files.catbox.moe/id2pyp.png" class="wolf-part body" alt="Wolf Body">
+        <img src="https://files.catbox.moe/gjr6r9.png" class="wolf-part back-leg" alt="Wolf Back Leg">
+        <img src="https://files.catbox.moe/bpm8fe.png" class="wolf-part front-leg" alt="Wolf Front Leg">
+    </div>
+
+    <script>
+        const sheepList = [
+            { id: 'sheep0', followSpeed: 0.010, proximityThreshold: 200, offsetX: 0, wanderSpeed: 1, wanderDelay: 1000, fleeSpeed: 0.008, fleeTargetX: 50 },
+            { id: 'sheep1', followSpeed: 0.009, proximityThreshold: 220, offsetX: 20, wanderSpeed: 0.8, wanderDelay: 1500, fleeSpeed: 0.007, fleeTargetX: 60 },
+            { id: 'sheep2', followSpeed: 0.011, proximityThreshold: 180, offsetX: -15, wanderSpeed: 1.2, wanderDelay: 2000, fleeSpeed: 0.009, fleeTargetX: 70 },
+            { id: 'sheep3', followSpeed: 0.0075, proximityThreshold: 250, offsetX: 30, wanderSpeed: 0.7, wanderDelay: 2500, fleeSpeed: 0.006, fleeTargetX: 80 },
+            { id: 'sheep4', followSpeed: 0.0125, proximityThreshold: 190, offsetX: -25, wanderSpeed: 1.5, wanderDelay: 3000, fleeSpeed: 0.010, fleeTargetX: 90 },
+            { id: 'sheep5', followSpeed: 0.010, proximityThreshold: 210, offsetX: 10, wanderSpeed: 1, wanderDelay: 3500, fleeSpeed: 0.008, fleeTargetX: 100 }
+        ];
+
+        sheepList.forEach((sheepData, index) => {
+            const sheep = document.getElementById(sheepData.id);
+            const sheepBody = sheep.querySelector('.sheep-body');
+            sheepData.element = sheep;
+            sheepData.bodyElement = sheepBody;
+            sheepData.x = window.innerWidth / 2 + (index * 50);
+            sheepData.y = 100;
+            sheepData.lastCursorX = null;
+            sheepData.lastCursorY = null;
+            sheepData.wanderDirection = 0;
+            sheepData.wanderTimer = null;
+            sheepData.lastWanderChange = 0;
+            sheepData.nextWanderChange = 0;
+            sheepData.isSleeping = false;
+            sheepData.prevX = sheepData.x;
+            sheepData.isFleeing = false;
+            sheepData.isWatching = false;
+
+            sheep.style.left = sheepData.x + 'px';
+            sheep.style.bottom = sheepData.y + 'px';
+            sheepBody.style.bottom = '0px';
+        });
+
+        let cursorX = null;
+        let cursorY = null;
+        let isNight = false;
+
+        const wolf = document.getElementById('wolf');
+        const wolfData = {
+            element: wolf,
+            x: window.innerWidth,
+            y: 128,
+            speed: 0.7,
+            direction: -1,
+            targetX: window.innerWidth / 2,
+            isPaused: false,
+            pauseStart: null
+        };
+        wolf.style.left = wolfData.x + 'px';
+        wolf.style.bottom = wolfData.y + 'px';
+        wolf.style.display = 'none';
+
+        // Coin and purchase system initialization with localStorage
+        let coins = parseInt(localStorage.getItem('sheepGameCoins')) || 0;
+        let dogPurchased = localStorage.getItem('dogPurchased') === 'true';
+        let dogEquipped = localStorage.getItem('dogEquipped') === 'true';
+
+        const coinCountElement = document.getElementById('coin-count');
+        const shopCoinCountElement = document.getElementById('shop-coin-count');
+        const buyEquipButton = document.querySelector('.buy-equip-button');
+        const dogSprite = document.getElementById('dog-sprite');
+
+        function updateCoinDisplay() {
+            coinCountElement.textContent = coins;
+            shopCoinCountElement.textContent = coins;
+            localStorage.setItem('sheepGameCoins', coins);
+        }
+
+        function updateDogState() {
+            if (dogPurchased) {
+                buyEquipButton.textContent = dogEquipped ? 'Unequip' : 'Equip';
+                dogSprite.style.display = dogEquipped ? 'block' : 'none';
+            } else {
+                buyEquipButton.textContent = 'Buy';
+            }
+            localStorage.setItem('dogPurchased', dogPurchased);
+            localStorage.setItem('dogEquipped', dogEquipped);
+        }
+
+        // Initialize state on page load
+        updateCoinDisplay();
+        updateDogState();
+
+        function trySpawnWolf() {
+            if (wolf.style.display === 'none' && !dogEquipped) { // Only spawn wolf if dog is not equipped
+                const spawnChance = Math.random();
+                if (spawnChance < 0.7) {
+                    wolf.style.display = 'block';
+                    wolfData.x = window.innerWidth;
+                    wolfData.direction = -1;
+                    wolf.style.transform = 'scaleX(1)';
+                    wolf.classList.remove('paused');
+                    sheepList.forEach(sheepData => {
+                        if (!sheepData.isSleeping) {
+                            sheepData.isFleeing = true;
+                            stopWandering(sheepData);
+                            sheepData.element.classList.remove('walking');
+                            sheepData.element.classList.remove('following');
+                            sheepData.element.classList.add('fleeing');
+                            sheepData.bodyElement.style.transform = 'scaleX(1)';
+                        }
+                    });
+                }
+            }
+        }
+
+        setInterval(trySpawnWolf, 100000);
+
+        function getRandomWanderInterval() {
+            return Math.random() * (10 - 3) + 3;
+        }
+
+        function startWandering(sheepData) {
+            if (!sheepData.wanderTimer && !sheepData.isSleeping && !sheepData.isFleeing && !sheepData.isWatching) {
+                sheepData.wanderTimer = setTimeout(() => {
+                    sheepData.wanderDirection = Math.random() > 0.5 ? 1 : -1;
+                    sheepData.element.classList.add('walking');
+                    sheepData.bodyElement.style.transform = sheepData.wanderDirection === 1 ? 'scaleX(-1)' : 'scaleX(1)';
+                    sheepData.lastWanderChange = Date.now();
+                    sheepData.nextWanderChange = getRandomWanderInterval();
+                }, sheepData.wanderDelay);
+            }
+        }
+
+        function stopWandering(sheepData) {
+            if (sheepData.wanderTimer) {
+                clearTimeout(sheepData.wanderTimer);
+                sheepData.wanderTimer = null;
+            }
+            sheepData.wanderDirection = 0;
+            sheepData.element.classList.remove('walking');
+        }
+
+        function updateWandering() {
+            const now = Date.now();
+
+            sheepList.forEach((sheepData) => {
+                const sheep = sheepData.element;
+                const sheepCenterX = sheepData.x + (sheep.offsetWidth / 2);
+
+                if (wolf.style.display === 'block' && !sheepData.isSleeping && !dogEquipped) { // Only flee if dog is not equipped
+                    if (sheepData.isFleeing) {
+                        const targetX = sheepData.fleeTargetX;
+                        const deltaX = (targetX - sheepData.x) * sheepData.fleeSpeed;
+                        sheepData.x += deltaX;
+                        sheep.style.left = sheepData.x + 'px';
+
+                        if (Math.abs(sheepData.x - targetX) < 10) {
+                            sheepData.isFleeing = false;
+                            sheepData.isWatching = true;
+                            sheepData.element.classList.remove('fleeing');
+                            sheepData.bodyElement.style.transform = 'scaleX(-1)';
+                        }
+                    }
+                } else if (!sheepData.isSleeping) {
+                    if (sheepData.isWatching) {
+                        sheepData.isWatching = false;
+                    }
+
+                    const sheepCenterY = window.innerHeight - sheepData.y - (sheep.offsetHeight / 2);
+                    let distance = Infinity;
+                    if (cursorX !== null && cursorY !== null) {
+                        distance = Math.sqrt(
+                            Math.pow(cursorX - sheepCenterX, 2) + 
+                            Math.pow(cursorY - sheepCenterY, 2)
+                        );
+                    }
+
+                    if (distance < sheepData.proximityThreshold) {
+                        stopWandering(sheepData);
+                        const targetX = cursorX - (sheep.offsetWidth / 2) + sheepData.offsetX;
+                        const deltaX = (targetX - sheepData.x) * sheepData.followSpeed;
+                        sheepData.x += deltaX;
+                        sheep.style.left = sheepData.x + 'px';
+
+                        const isMoving = Math.abs(sheepData.x - sheepData.prevX) > 0.5;
+                        if (isMoving) {
+                            sheep.classList.add('following');
+                            if (cursorX > sheepCenterX) {
+                                sheepData.bodyElement.style.transform = 'scaleX(-1)';
+                            } else {
+                                sheepData.bodyElement.style.transform = 'scaleX(1)';
+                            }
+                        } else {
+                            sheep.classList.remove('following');
+                        }
+                        sheepData.prevX = sheepData.x;
+                    } else {
+                        startWandering(sheepData);
+
+                        if (sheepData.wanderDirection !== 0) {
+                            sheepData.x += sheepData.wanderDirection * sheepData.wanderSpeed;
+                            sheep.style.left = sheepData.x + 'px';
+
+                            const timeSinceLastChange = (now - sheepData.lastWanderChange) / 1000;
+                            if (sheepData.x <= 0 || sheepData.x >= window.innerWidth - sheep.offsetWidth || timeSinceLastChange >= sheepData.nextWanderChange) {
+                                sheepData.wanderDirection = Math.random() > 0.5 ? 1 : -1;
+                                sheepData.bodyElement.style.transform = sheepData.wanderDirection === 1 ? 'scaleX(-1)' : 'scaleX(1)';
+                                sheepData.lastWanderChange = now;
+                                sheepData.nextWanderChange = getRandomWanderInterval();
+                            }
+
+                            sheepData.x = Math.max(0, Math.min(sheepData.x, window.innerWidth - sheep.offsetWidth));
+                        }
+                    }
+                }
+            });
+
+            if (wolf.style.display === 'block') {
+                if (!wolfData.isPaused) {
+                    wolfData.x += wolfData.speed * wolfData.direction;
+                    wolf.style.left = wolfData.x + 'px';
+
+                    if (wolfData.direction === -1 && wolfData.x <= wolfData.targetX) {
+                        wolfData.isPaused = true;
+                        wolfData.pauseStart = now;
+                        wolf.classList.add('paused');
+                    }
+                } else {
+                    const pauseDuration = (now - wolfData.pauseStart) / 1000;
+                    if (pauseDuration >= 1.2) {
+                        wolfData.isPaused = false;
+                        wolfData.direction = 1;
+                        wolf.style.transform = 'scaleX(-1)';
+                        wolf.classList.remove('paused');
+                    }
+                }
+
+                if (wolfData.direction === 1 && wolfData.x >= window.innerWidth && !wolfData.isPaused) {
+                    wolf.style.display = 'none';
+                }
+            }
+
+            requestAnimationFrame(updateWandering);
+        }
+
+        requestAnimationFrame(updateWandering);
+
+        document.addEventListener('mousemove', (event) => {
+            cursorX = event.clientX;
+            cursorY = event.clientY;
+        });
+
+        const dayLayer = document.getElementById('background-day');
+        const overlay = document.getElementById('background-overlay');
+        const sheepElements = document.querySelectorAll('.sheep');
+        const wolfElement = document.getElementById('wolf');
+
+        function changeBackground() {
+            overlay.style.opacity = '0';
+            dayLayer.style.filter = 'none';
+            overlay.style.filter = 'none';
+            sheepElements.forEach(sheep => {
+                sheep.style.filter = 'none';
+            });
+            wolfElement.style.filter = 'none';
+            isNight = false;
+            sheepList.forEach(sheepData => {
+                sheepData.isSleeping = false;
+                sheepData.isFleeing = false;
+                sheepData.isWatching = false;
+                sheepData.bodyElement.style.backgroundImage = 'url("https://files.catbox.moe/14n3vz.png")';
+                sheepData.element.style.pointerEvents = 'none';
+                sheepData.element.classList.remove('walking');
+                sheepData.element.classList.remove('following');
+                sheepData.element.classList.remove('fleeing');
+                sheepData.bodyElement.style.bottom = '0px';
+            });
+
+            setTimeout(() => {
+                overlay.style.opacity = '1';
+                dayLayer.style.filter = 'blur(0.5px) brightness(0.6)';
+                overlay.style.filter = 'blur(0.5px) brightness(0.6)';
+                sheepElements.forEach(sheep => {
+                    sheep.style.filter = 'blur(0.4px) brightness(0.8)';
+                });
+                wolfElement.style.filter = 'blur(0.4px) brightness(0.8)';
+                isNight = true;
+                sheepList.forEach(sheepData => {
+                    sheepData.element.style.pointerEvents = 'auto';
+                });
+            }, 65000);
+        }
+
+        function showCoinGain(sheep) {
+            const coinGain = document.createElement('div');
+            coinGain.className = 'coin-gain';
+            coinGain.innerHTML = '+2 <img src="https://files.catbox.moe/8n2ufc.png" alt="Coin">';
+            
+            const sheepRect = sheep.getBoundingClientRect();
+            coinGain.style.left = (sheepRect.left + sheepRect.width / 2 - 30) + 'px';
+            coinGain.style.bottom = (window.innerHeight - sheepRect.top + 10) + 'px';
+            
+            document.body.appendChild(coinGain);
+            
+            setTimeout(() => {
+                coinGain.remove();
+            }, 1000);
+        }
+
+        sheepElements.forEach(sheep => {
+            sheep.addEventListener('click', () => {
+                if (isNight) {
+                    const sheepData = sheepList.find(data => data.element === sheep);
+                    if (sheepData && !sheepData.isSleeping) {
+                        sheepData.bodyElement.style.bottom = '-20px';
+                        stopWandering(sheepData);
+                        sheepData.isFleeing = false;
+                        sheepData.isWatching = false;
+                        sheep.classList.remove('walking');
+                        sheep.classList.remove('following');
+                        sheep.classList.remove('fleeing');
+
+                        setTimeout(() => {
+                            sheepData.isSleeping = true;
+                            sheepData.bodyElement.style.backgroundImage = 'url("https://files.catbox.moe/udiuhi.png")';
+                            coins += 2;
+                            updateCoinDisplay();
+                            showCoinGain(sheep);
+                        }, 300);
+                    }
+                }
+            });
+        });
+
+        // Shop UI functionality for Dog purchase and equip
+        const coinUi = document.getElementById('coin-ui');
+        const shopUi = document.getElementById('shop-ui');
+        const exitButton = document.getElementById('exit-button');
+
+        coinUi.addEventListener('click', () => {
+            shopUi.style.display = 'block';
+        });
+
+        exitButton.addEventListener('click', () => {
+            shopUi.style.display = 'none';
+        });
+
+        buyEquipButton.addEventListener('click', () => {
+            if (!dogPurchased) {
+                if (coins >= 50) {
+                    coins -= 50;
+                    dogPurchased = true;
+                    updateCoinDisplay();
+                    updateDogState();
+                } else {
+                    alert('Not enough coins!');
+                }
+            } else {
+                dogEquipped = !dogEquipped; // Toggle equip/unequip
+                updateDogState();
+            }
+        });
+
+        changeBackground();
+        setInterval(changeBackground, 95000);
+    </script>
+</body>
+</html>
